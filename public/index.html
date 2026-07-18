@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LXRN Pure WebGL</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0a0e27; font-family: Arial; }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 1px solid #00d4ff44;
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+        }
+        #info h1 { margin: 0; font-size: 1.5rem; background: linear-gradient(45deg, #00d4ff, #7b2ffc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        #info p { margin: 4px 0 0; font-size: 0.8rem; color: #8892b0; -webkit-text-fill-color: #8892b0; }
+        #stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #64ffda;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: monospace;
+            z-index: 10;
+            border: 1px solid #64ffda22;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>LXRN · Pure WebGL</h1>
+        <p>No external libraries · 100% native</p>
+    </div>
+    <div id="stats">FPS: <span id="fps">0</span></div>
+
+    <script src="/lxrn.js"></script>
+    <script>
+        // --- LXRN 3D Engine Demo ---
+        const canvas = document.createElement('canvas');
+        document.body.prepend(canvas);
+
+        const scene = new LXRN.Scene();
+        scene.setBackground(0.05, 0.03, 0.08, 1);
+
+        const camera = new LXRN.Camera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.setPosition(0, 0, 4);
+
+        const renderer = new LXRN.Renderer(canvas);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Create object
+        const geo = LXRN.Geometry.Icosahedron(1.2);
+        const mesh = new LXRN.Mesh(geo, { color: [0.7, 0.3, 0.9] });
+        scene.add(mesh);
+        scene.camera = camera;
+
+        // Second object (cube)
+        const geo2 = LXRN.Geometry.Box(0.6, 0.6, 0.6);
+        const mesh2 = new LXRN.Mesh(geo2, { color: [0.0, 0.8, 1.0] });
+        mesh2.position = [2.0, 0.0, 0.5];
+        scene.add(mesh2);
+
+        // FPS counter
+        let frameCount = 0;
+        let lastTime = performance.now();
+        const fpsElement = document.getElementById('fps');
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate objects
+            mesh.rotation[0] += 0.01;
+            mesh.rotation[1] += 0.015;
+            mesh.rotation[2] += 0.005;
+
+            mesh2.rotation[0] += 0.02;
+            mesh2.rotation[1] += 0.025;
+
+            // Orbit camera
+            const time = Date.now() / 3000;
+            camera.position[0] = Math.sin(time) * 3;
+            camera.position[1] = Math.cos(time * 0.7) * 1.5;
+            camera.position[2] = 4 + Math.sin(time * 0.5) * 0.5;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene);
+
+            // FPS
+            frameCount++;
+            const now = performance.now();
+            if (now - lastTime >= 1000) {
+                fpsElement.textContent = frameCount;
+                frameCount = 0;
+                lastTime = now;
+            }
+        }
+
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            renderer.setSize(w, h);
+        });
+    </script>
+</body>
+</html>
